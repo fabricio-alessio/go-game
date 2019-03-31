@@ -149,7 +149,7 @@ func (m *menu) moveDown() {
 func (m *menu) choose() {
 
 	gameStarted = true
-	score.reset()
+	score.resetPointsP1()
 	plr.replay()
 	plr.start()
 }

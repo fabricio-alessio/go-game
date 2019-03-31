@@ -65,5 +65,5 @@ func (d *debug) update(pos int8) {
 	}
 	output := d.values[pos]
 	d.texs[pos].Destroy()
-	d.texs[pos] = newText(d.renderer, output)
+	d.texs[pos] = newTextTexture(d.renderer, output)
 }

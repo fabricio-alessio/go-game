@@ -11,10 +11,10 @@ import (
 const (
 	//screenWidth  = 640
 	//screenHeight = 480
-	//screenWidth  = 1536
-	//screenHeight = 864
-	screenWidth          = 800
-	screenHeight         = 600
+	screenWidth  = 1536
+	screenHeight = 864
+	//screenWidth          = 800
+	//screenHeight         = 600
 	targetTicksPerSecond = 60
 	millisByFrame        = (uint32)(1000 / targetTicksPerSecond)
 	scale                = 2
@@ -80,7 +80,7 @@ func main() {
 	var err error
 
 	window, err = sdl.CreateWindow(winTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		screenWidth, screenHeight, sdl.WINDOW_OPENGL)
+		screenWidth, screenHeight, sdl.WINDOW_FULLSCREEN_DESKTOP)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create window: %s\n", err)
 		panic(err)

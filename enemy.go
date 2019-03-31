@@ -112,7 +112,7 @@ func (e *enemy) update() {
 
 func (e *enemy) beHit() {
 
-	score.increment(1)
+	score.incrementPointsP1(1)
 	chunkHit.Play(0, 0)
 	e.hit = true
 	e.hitCount++

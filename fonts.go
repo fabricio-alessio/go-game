@@ -27,7 +27,7 @@ func initFonts() {
 	}
 }
 
-func newText(renderer *sdl.Renderer, text string) (tex *sdl.Texture) {
+func newTextTexture(renderer *sdl.Renderer, text string) (tex *sdl.Texture) {
 
 	color := sdl.Color{R: 200, G: 200, B: 200, A: 255}
 

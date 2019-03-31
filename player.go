@@ -16,7 +16,7 @@ const (
 	playerCollisionRadius = 16
 	playerBulletSpeed     = 10
 	playerInitialLives    = 3
-	playerMaxDamage       = 5
+	playerMaxShield       = 5
 )
 
 type player struct {
@@ -29,7 +29,7 @@ type player struct {
 	texXPos         int32
 	texYPos         int32
 	lives           int8
-	damage          int8
+	shield          int8
 	active          bool
 	starting        bool
 }
@@ -41,7 +41,8 @@ func newPlayer(renderer *sdl.Renderer) (p player) {
 	p.x = screenWidth / 2.0
 	p.y = screenHeight - (playerHeight * scale)
 
-	p.lives = playerInitialLives
+	p.setLives(playerInitialLives)
+	p.setShield(playerMaxShield)
 	p.texXPos = 2
 	p.texYPos = 1
 	p.active = true
@@ -201,19 +202,19 @@ func (p *player) update() {
 
 func (p *player) beHit() {
 
-	p.damage++
+	p.setShield(p.shield - 1)
 	chunkHit.Play(0, 0)
 
-	if p.damage >= playerMaxDamage {
+	if p.shield <= 0 {
 		p.beDestroyed()
 	}
-	deb.set(1, fmt.Sprintf("damage %d lives %d", p.damage, p.lives))
+	deb.set(1, fmt.Sprintf("shield %d lives %d", p.shield, p.lives))
 }
 
 func (p *player) beDestroyed() {
 
 	chunkExplosion.Play(2, 0)
-	p.lives--
+	p.setLives(p.lives - 1)
 	ex := explosionFromPool()
 	ex.start(p.x, p.y, enemySpeed)
 
@@ -227,14 +228,26 @@ func (p *player) beDestroyed() {
 
 func (p *player) replay() {
 
-	p.lives = playerInitialLives
+	p.setLives(playerInitialLives)
+}
+
+func (p *player) setLives(qtd int8) {
+
+	p.lives = qtd
+	score.setLivesP1(qtd)
+}
+
+func (p *player) setShield(qtd int8) {
+
+	p.shield = qtd
+	score.setShieldP1(qtd)
 }
 
 func (p *player) start() {
 
 	p.x = screenWidth / 2.0
 	p.y = screenHeight + (playerHeight * scale)
-	p.damage = 0
+	p.setShield(playerMaxShield)
 	p.active = true
 	p.texXPos = 2
 	p.texYPos = 1

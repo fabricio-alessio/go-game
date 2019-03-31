@@ -13,21 +13,23 @@ func collides(c1, c2 circle) bool {
 	return dist <= c1.radius+c2.radius
 }
 
-func checkCollisions(enemies []*enemy) {
+func checkCollisions(enemiesBig []*enemyBig, enemiesSmall []*enemySmall) {
 
-	checkCollisionsEnemies(enemies)
-	checkCollisionsPlayer(enemies)
+	checkCollisionsEnemiesBig(enemiesBig)
+	checkCollisionsEnemiesSmall(enemiesSmall)
+	checkCollisionsPlayer(enemiesBig)
 }
-func checkCollisionsEnemies(enemies []*enemy) {
 
-	for _, en := range enemies {
+func checkCollisionsEnemiesBig(enemiesBig []*enemyBig) {
+
+	for _, en := range enemiesBig {
 		if en.active {
 			for _, bul := range bulletPool {
 				if bul.active && bul.fromPlayer {
 					cEn := circle{
 						x:      en.x,
 						y:      en.y,
-						radius: enemyCollisionRadius,
+						radius: enemyBigCollisionRadius,
 					}
 					cBul := circle{
 						x:      bul.x,
@@ -44,7 +46,33 @@ func checkCollisionsEnemies(enemies []*enemy) {
 	}
 }
 
-func checkCollisionsPlayer(enemies []*enemy) {
+func checkCollisionsEnemiesSmall(enemiesSmall []*enemySmall) {
+
+	for _, en := range enemiesSmall {
+		if en.active {
+			for _, bul := range bulletPool {
+				if bul.active && bul.fromPlayer {
+					cEn := circle{
+						x:      en.x,
+						y:      en.y,
+						radius: enemySmallCollisionRadius,
+					}
+					cBul := circle{
+						x:      bul.x,
+						y:      bul.y,
+						radius: bulletCollisionRadius,
+					}
+					if collides(cEn, cBul) {
+						bul.active = false
+						en.beHit()
+					}
+				}
+			}
+		}
+	}
+}
+
+func checkCollisionsPlayer(enemiesBig []*enemyBig) {
 
 	if !plr.active {
 		return
@@ -56,12 +84,26 @@ func checkCollisionsPlayer(enemies []*enemy) {
 		radius: playerCollisionRadius,
 	}
 
-	for _, en := range enemies {
+	for _, en := range enemiesBig {
 		if en.active {
 			cEn := circle{
 				x:      en.x,
 				y:      en.y,
-				radius: enemyCollisionRadius,
+				radius: enemyBigCollisionRadius,
+			}
+			if collides(cEn, cPlr) {
+				en.beDestroyed()
+				plr.beDestroyed()
+			}
+		}
+	}
+
+	for _, en := range enemiesSmall {
+		if en.active {
+			cEn := circle{
+				x:      en.x,
+				y:      en.y,
+				radius: enemySmallCollisionRadius,
 			}
 			if collides(cEn, cPlr) {
 				en.beDestroyed()

@@ -7,16 +7,16 @@ import (
 )
 
 const (
-	enemySpeed           = 1
-	enemySize            = 32
-	enemyCollisionRadius = 26
-	enemyHitCooldown     = time.Millisecond * 250
-	enemyShotCooldown    = time.Millisecond * 2500
-	enemyMaxHitCount     = 4
-	enemyBulletSpeed     = 5
+	enemyBigSpeed           = 1
+	enemyBigSize            = 32
+	enemyBigCollisionRadius = 26
+	enemyBigHitCooldown     = time.Millisecond * 250
+	enemyBigShotCooldown    = time.Millisecond * 2500
+	enemyBigMaxHitCount     = 4
+	enemyBigBulletSpeed     = 5
 )
 
-type enemy struct {
+type enemyBig struct {
 	tex             *sdl.Texture
 	texHit          *sdl.Texture
 	x, y            float64
@@ -29,7 +29,7 @@ type enemy struct {
 	hitCount        int8
 }
 
-func newEnemy(renderer *sdl.Renderer, x, y float64) (e enemy) {
+func newenemyBig(renderer *sdl.Renderer, x, y float64) (e enemyBig) {
 
 	e.tex = newTexture(renderer, "sprites/enemy-big.png")
 	e.texHit = newTexture(renderer, "sprites/enemy-big-hit.png")
@@ -42,13 +42,13 @@ func newEnemy(renderer *sdl.Renderer, x, y float64) (e enemy) {
 	return e
 }
 
-func (e *enemy) draw(renderer *sdl.Renderer) {
+func (e *enemyBig) draw(renderer *sdl.Renderer) {
 
 	if !e.active {
 		return
 	}
 
-	drawEnemySize := enemySize * scale
+	drawEnemySize := enemyBigSize * scale
 	drawX := e.x - float64(drawEnemySize)/2.0
 	drawY := e.y - float64(drawEnemySize)/2.0
 	drawRect := sdl.Rect{X: int32(drawX), Y: int32(drawY), W: int32(drawEnemySize), H: int32(drawEnemySize)}
@@ -60,10 +60,10 @@ func (e *enemy) draw(renderer *sdl.Renderer) {
 		tex = e.tex
 	}
 
-	xTex := e.texXPos * enemySize
+	xTex := e.texXPos * enemyBigSize
 
 	renderer.CopyEx(tex,
-		&sdl.Rect{X: xTex, Y: 0, W: enemySize, H: enemySize},
+		&sdl.Rect{X: xTex, Y: 0, W: enemyBigSize, H: enemyBigSize},
 		&drawRect,
 		0,
 		&sdl.Point{X: drawRect.W / 2.0, Y: drawRect.H / 2.0},
@@ -75,19 +75,19 @@ func (e *enemy) draw(renderer *sdl.Renderer) {
 		renderer.DrawRect(&drawRect)
 
 		// debug rect of collision
-		collisionRect := sdl.Rect{X: int32(e.x - enemyCollisionRadius), Y: int32(e.y - enemyCollisionRadius),
-			W: enemyCollisionRadius * 2, H: enemyCollisionRadius * 2}
+		collisionRect := sdl.Rect{X: int32(e.x - enemyBigCollisionRadius), Y: int32(e.y - enemyBigCollisionRadius),
+			W: enemyBigCollisionRadius * 2, H: enemyBigCollisionRadius * 2}
 		renderer.DrawRect(&collisionRect)
 	}
 }
 
-func (e *enemy) update() {
+func (e *enemyBig) update() {
 
 	if !e.active {
 		return
 	}
 
-	if e.hit && time.Since(e.lastTimeHit) >= enemyHitCooldown {
+	if e.hit && time.Since(e.lastTimeHit) >= enemyBigHitCooldown {
 		e.hit = false
 	}
 
@@ -102,7 +102,7 @@ func (e *enemy) update() {
 
 	e.shoot()
 
-	eSpeed := enemySpeed * delta
+	eSpeed := enemyBigSpeed * delta
 
 	e.y += eSpeed
 	if e.y > screenHeight {
@@ -110,7 +110,7 @@ func (e *enemy) update() {
 	}
 }
 
-func (e *enemy) beHit() {
+func (e *enemyBig) beHit() {
 
 	score.incrementPointsP1(1)
 	chunkHit.Play(0, 0)
@@ -118,42 +118,53 @@ func (e *enemy) beHit() {
 	e.hitCount++
 	e.lastTimeHit = time.Now()
 
-	if e.hitCount >= enemyMaxHitCount {
+	if e.hitCount >= enemyBigMaxHitCount {
 		e.beDestroyed()
 	}
 }
 
-func (e *enemy) beDestroyed() {
+func (e *enemyBig) beDestroyed() {
 
 	chunkExplosion.Play(2, 0)
 	e.active = false
 	ex := explosionFromPool()
-	ex.start(e.x, e.y, enemySpeed)
+	ex.start(e.x, e.y, enemyBigSpeed)
 }
 
-func (e *enemy) shoot() {
-	if time.Since(e.lastTimeShot) >= enemyShotCooldown {
+func (e *enemyBig) shoot() {
+
+	if time.Since(e.lastTimeShot) >= enemyBigShotCooldown {
 		chunkLaser.Play(1, 0)
 		bul := bulletFromPool()
 		if bul != nil {
 			angle := angleOfLine(e.x, e.y, plr.x, plr.y)
-			bul.start(e.x, e.y, angle, enemyBulletSpeed, false)
+			bul.start(e.x, e.y, angle, enemyBigBulletSpeed, false)
 			e.lastTimeShot = time.Now()
 		}
 	}
 }
 
-var enemies []*enemy
+var enemiesBig []*enemyBig
 
-func initEnemies(renderer *sdl.Renderer) {
+func initEnemiesBig(renderer *sdl.Renderer) {
 	for i := 0; i < 20; i++ {
-		en := newEnemy(renderer, screenWidth/2+enemySize, -1*enemySize)
-		enemies = append(enemies, &en)
+		en := newenemyBig(renderer, screenWidth/2+enemyBigSize, -1*enemyBigSize)
+		enemiesBig = append(enemiesBig, &en)
 	}
 }
 
-func deactivateAllEnemies() {
-	for _, en := range enemies {
+func deactivateAllEnemiesBig() {
+	for _, en := range enemiesBig {
 		en.active = false
 	}
+}
+
+func enemyBigFromPool() *enemyBig {
+	for _, en := range enemiesBig {
+		if !en.active {
+			return en
+		}
+	}
+
+	return nil
 }

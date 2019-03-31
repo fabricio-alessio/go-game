@@ -80,7 +80,7 @@ func main() {
 	var err error
 
 	window, err = sdl.CreateWindow(winTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		screenWidth, screenHeight, sdl.WINDOW_FULLSCREEN_DESKTOP)
+		screenWidth, screenHeight, sdl.WINDOW_OPENGL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create window: %s\n", err)
 		panic(err)
@@ -103,7 +103,8 @@ func main() {
 
 	plr = newPlayer(renderer)
 
-	initEnemies(renderer)
+	initEnemiesBig(renderer)
+	initEnemiesSmall(renderer)
 	initExplosions(renderer)
 	initBulletPool(renderer)
 	efleet = newEnemyFleet()
@@ -158,7 +159,11 @@ func main() {
 			plr.draw(renderer)
 			plr.update()
 			efleet.update()
-			for _, en := range enemies {
+			for _, en := range enemiesBig {
+				en.draw(renderer)
+				en.update()
+			}
+			for _, en := range enemiesSmall {
 				en.draw(renderer)
 				en.update()
 			}
@@ -173,7 +178,7 @@ func main() {
 			}
 			score.draw(renderer)
 			deb.draw(renderer)
-			checkCollisions(enemies)
+			checkCollisions(enemiesBig, enemiesSmall)
 		} else {
 
 			gameMenu.draw(renderer)

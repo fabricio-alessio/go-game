@@ -216,7 +216,7 @@ func (p *player) beDestroyed() {
 	chunkExplosion.Play(2, 0)
 	p.setLives(p.lives - 1)
 	ex := explosionFromPool()
-	ex.start(p.x, p.y, enemySpeed)
+	ex.start(p.x, p.y, enemyBigSpeed)
 
 	p.active = false
 	if p.lives > 0 {

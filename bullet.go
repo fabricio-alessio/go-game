@@ -13,6 +13,7 @@ const (
 )
 
 type bullet struct {
+	renderer        *sdl.Renderer
 	tex             *sdl.Texture
 	x, y            float64
 	angle           float64
@@ -21,20 +22,52 @@ type bullet struct {
 	texXPos         int32
 	texYPos         int32
 	lastTimeBooster time.Time
-	fromPlayer      bool
+	entityType      int8
 }
 
-func newBullet(renderer *sdl.Renderer) (b bullet) {
+func newBullet(renderer *sdl.Renderer) *bullet {
 
-	b.tex = newTexture(renderer, "sprites/laser-bolts2.png")
+	bul := bullet{
+		renderer: renderer,
+		tex:      newTexture(renderer, "sprites/laser-bolts2.png"),
+		texXPos:  0,
+		texYPos:  1}
 
-	b.texXPos = 0
-	b.texYPos = 1
-
-	return b
+	return &bul
 }
 
-func (b *bullet) draw(renderer *sdl.Renderer) {
+func (b *bullet) deactivate() {
+
+	b.active = false
+}
+
+func (b *bullet) getCollisionCircle() circle {
+
+	return circle{x: b.x, y: b.y, radius: bulletCollisionRadius}
+}
+
+func (b *bullet) isActive() bool {
+
+	return b.active
+}
+
+func (b *bullet) getType() int8 {
+
+	return b.entityType
+}
+
+func (b *bullet) executeCollisionWith(other entity) {
+
+	if b.getType() == entityTypeEnemyBullet && other.getType() == entityTypePlayer {
+		b.deactivate()
+	} else if b.getType() == entityTypePlayerBullet && other.getType() == entityTypeEnemyBig {
+		b.deactivate()
+	} else if b.getType() == entityTypePlayerBullet && other.getType() == entityTypeEnemySmall {
+		b.deactivate()
+	}
+}
+
+func (b *bullet) draw() {
 
 	if !b.active {
 		return
@@ -48,19 +81,19 @@ func (b *bullet) draw(renderer *sdl.Renderer) {
 	xTex := b.texXPos * bulletSize
 	yTex := b.texYPos * bulletSize
 
-	renderer.Copy(b.tex,
+	b.renderer.Copy(b.tex,
 		&sdl.Rect{X: xTex, Y: yTex, W: bulletSize, H: bulletSize},
 		&drawRect)
 
 	if deb.active {
 		// debug drawRect
-		renderer.SetDrawColor(255, 0, 0, 255)
-		renderer.DrawRect(&drawRect)
+		b.renderer.SetDrawColor(255, 0, 0, 255)
+		b.renderer.DrawRect(&drawRect)
 
 		// debug rect of collision
 		collisionRect := sdl.Rect{X: int32(b.x - bulletCollisionRadius), Y: int32(b.y - bulletCollisionRadius),
 			W: bulletCollisionRadius * 2, H: bulletCollisionRadius * 2}
-		renderer.DrawRect(&collisionRect)
+		b.renderer.DrawRect(&collisionRect)
 	}
 }
 
@@ -88,14 +121,14 @@ func (b *bullet) update() {
 	}
 }
 
-func (b *bullet) start(x, y, angle, speed float64, fromPlayer bool) {
+func (b *bullet) start(x, y, angle, speed float64, entityType int8) {
 
 	b.x = x
 	b.y = y
 	b.angle = angle
 	b.speed = speed
-	b.fromPlayer = fromPlayer
-	if fromPlayer {
+	b.entityType = entityType
+	if entityType == entityTypePlayerBullet {
 		b.texYPos = 1
 	} else {
 		b.texYPos = 0
@@ -104,19 +137,19 @@ func (b *bullet) start(x, y, angle, speed float64, fromPlayer bool) {
 	b.active = true
 }
 
-var bulletPool []*bullet
+var bulletPool []entity
 
 func initBulletPool(renderer *sdl.Renderer) {
 
 	for i := 0; i < 30; i++ {
 		b := newBullet(renderer)
-		bulletPool = append(bulletPool, &b)
+		bulletPool = append(bulletPool, b)
 	}
 }
 
-func bulletFromPool() *bullet {
+func bulletFromPool() entity {
 	for _, bul := range bulletPool {
-		if !bul.active {
+		if !bul.isActive() {
 			return bul
 		}
 	}
@@ -126,6 +159,6 @@ func bulletFromPool() *bullet {
 
 func deactivateAllBullets() {
 	for _, bul := range bulletPool {
-		bul.active = false
+		bul.deactivate()
 	}
 }

@@ -20,6 +20,7 @@ const (
 )
 
 type player struct {
+	renderer        *sdl.Renderer
 	tex             *sdl.Texture
 	x, y            float64
 	lastTimeShot    time.Time
@@ -34,23 +35,24 @@ type player struct {
 	starting        bool
 }
 
-func newPlayer(renderer *sdl.Renderer) (p player) {
+func newPlayer(renderer *sdl.Renderer) *player {
 
-	p.tex = newTexture(renderer, "sprites/ship.png")
+	plr := player{
+		renderer: renderer,
+		tex:      newTexture(renderer, "sprites/ship.png"),
+		x:        screenWidth / 2.0,
+		y:        screenHeight - (playerHeight * scale),
+		texXPos:  2,
+		texYPos:  1,
+		active:   true}
 
-	p.x = screenWidth / 2.0
-	p.y = screenHeight - (playerHeight * scale)
+	plr.setLives(playerInitialLives)
+	plr.setShield(playerMaxShield)
 
-	p.setLives(playerInitialLives)
-	p.setShield(playerMaxShield)
-	p.texXPos = 2
-	p.texYPos = 1
-	p.active = true
-
-	return p
+	return &plr
 }
 
-func (p *player) draw(renderer *sdl.Renderer) {
+func (p *player) draw() {
 
 	if !p.active {
 		return
@@ -65,19 +67,19 @@ func (p *player) draw(renderer *sdl.Renderer) {
 	xTex := p.texXPos * playerWidth
 	yTex := p.texYPos * playerHeight
 
-	renderer.Copy(p.tex,
+	p.renderer.Copy(p.tex,
 		&sdl.Rect{X: xTex, Y: yTex, W: playerWidth, H: playerHeight},
 		&drawRect)
 
 	if deb.active {
 		// debug drawRect
-		renderer.SetDrawColor(255, 0, 0, 255)
-		renderer.DrawRect(&drawRect)
+		p.renderer.SetDrawColor(255, 0, 0, 255)
+		p.renderer.DrawRect(&drawRect)
 
 		// debug rect of collision
 		collisionRect := sdl.Rect{X: int32(p.x - playerCollisionRadius), Y: int32(p.y - playerCollisionRadius),
 			W: playerCollisionRadius * 2, H: playerCollisionRadius * 2}
-		renderer.DrawRect(&collisionRect)
+		p.renderer.DrawRect(&collisionRect)
 	}
 }
 
@@ -127,7 +129,7 @@ func (p *player) shoot() {
 		chunkLaser.Play(1, 0)
 		bul := bulletFromPool()
 		if bul != nil {
-			bul.start(p.x, p.y, 270*(math.Pi/180), playerBulletSpeed, true)
+			bul.start(p.x, p.y, 270*(math.Pi/180), playerBulletSpeed, entityTypePlayerBullet)
 			p.lastTimeShot = time.Now()
 		}
 	}
@@ -243,7 +245,7 @@ func (p *player) setShield(qtd int8) {
 	score.setShieldP1(qtd)
 }
 
-func (p *player) start() {
+func (p *player) start(x, y, angle, speed float64, entityType int8) {
 
 	p.x = screenWidth / 2.0
 	p.y = screenHeight + (playerHeight * scale)
@@ -252,4 +254,35 @@ func (p *player) start() {
 	p.texXPos = 2
 	p.texYPos = 1
 	p.starting = true
+}
+
+func (p *player) executeCollisionWith(other entity) {
+
+	if other.getType() == entityTypeEnemyBullet {
+		p.beHit()
+	} else if other.getType() == entityTypeEnemyBig {
+		p.beDestroyed()
+	} else if other.getType() == entityTypeEnemySmall {
+		p.beDestroyed()
+	}
+}
+
+func (p *player) getCollisionCircle() circle {
+
+	return circle{x: p.x, y: p.y, radius: playerCollisionRadius}
+}
+
+func (p *player) isActive() bool {
+
+	return p.active
+}
+
+func (p *player) getType() int8 {
+
+	return entityTypePlayer
+}
+
+func (p *player) deactivate() {
+
+	p.active = false
 }

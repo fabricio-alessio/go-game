@@ -13,115 +13,58 @@ func collides(c1, c2 circle) bool {
 	return dist <= c1.radius+c2.radius
 }
 
-func checkCollisions(enemiesBig []*enemyBig, enemiesSmall []*enemySmall) {
+func checkCollisions(enemiesBig []entity, enemiesSmall []entity) {
 
-	checkCollisionsEnemiesBig(enemiesBig)
-	checkCollisionsEnemiesSmall(enemiesSmall)
-	checkCollisionsPlayer(enemiesBig)
+	checkCollisionsEnemies(enemiesBig)
+	checkCollisionsEnemies(enemiesSmall)
+	checkCollisionsPlayer()
 }
 
-func checkCollisionsEnemiesBig(enemiesBig []*enemyBig) {
+func checkCollisionsEnemies(enemiesBig []entity) {
 
 	for _, en := range enemiesBig {
-		if en.active {
+		if en.isActive() {
 			for _, bul := range bulletPool {
-				if bul.active && bul.fromPlayer {
-					cEn := circle{
-						x:      en.x,
-						y:      en.y,
-						radius: enemyBigCollisionRadius,
-					}
-					cBul := circle{
-						x:      bul.x,
-						y:      bul.y,
-						radius: bulletCollisionRadius,
-					}
-					if collides(cEn, cBul) {
-						bul.active = false
-						en.beHit()
-					}
+				if bul.isActive() && collides(en.getCollisionCircle(), bul.getCollisionCircle()) {
+					en.executeCollisionWith(bul)
+					bul.executeCollisionWith(en)
 				}
 			}
 		}
 	}
 }
 
-func checkCollisionsEnemiesSmall(enemiesSmall []*enemySmall) {
+func checkCollisionsPlayer() {
 
-	for _, en := range enemiesSmall {
-		if en.active {
-			for _, bul := range bulletPool {
-				if bul.active && bul.fromPlayer {
-					cEn := circle{
-						x:      en.x,
-						y:      en.y,
-						radius: enemySmallCollisionRadius,
-					}
-					cBul := circle{
-						x:      bul.x,
-						y:      bul.y,
-						radius: bulletCollisionRadius,
-					}
-					if collides(cEn, cBul) {
-						bul.active = false
-						en.beHit()
-					}
-				}
-			}
-		}
-	}
-}
-
-func checkCollisionsPlayer(enemiesBig []*enemyBig) {
-
-	if !plr.active {
+	if !plr.isActive() {
 		return
 	}
 
-	cPlr := circle{
-		x:      plr.x,
-		y:      plr.y,
-		radius: playerCollisionRadius,
-	}
+	cPlr := plr.getCollisionCircle()
 
 	for _, en := range enemiesBig {
-		if en.active {
-			cEn := circle{
-				x:      en.x,
-				y:      en.y,
-				radius: enemyBigCollisionRadius,
-			}
-			if collides(cEn, cPlr) {
-				en.beDestroyed()
-				plr.beDestroyed()
+		if en.isActive() {
+			if collides(en.getCollisionCircle(), cPlr) {
+				en.executeCollisionWith(plr)
+				plr.executeCollisionWith(en)
 			}
 		}
 	}
 
 	for _, en := range enemiesSmall {
-		if en.active {
-			cEn := circle{
-				x:      en.x,
-				y:      en.y,
-				radius: enemySmallCollisionRadius,
-			}
-			if collides(cEn, cPlr) {
-				en.beDestroyed()
-				plr.beDestroyed()
+		if en.isActive() {
+			if collides(en.getCollisionCircle(), cPlr) {
+				en.executeCollisionWith(plr)
+				plr.executeCollisionWith(en)
 			}
 		}
 	}
 
 	for _, bul := range bulletPool {
-		if bul.active && !bul.fromPlayer {
-			cBul := circle{
-				x:      bul.x,
-				y:      bul.y,
-				radius: bulletCollisionRadius,
-			}
-			if collides(cPlr, cBul) {
-				bul.active = false
-				plr.beHit()
+		if bul.isActive() && bul.getType() == entityTypeEnemyBullet {
+			if collides(cPlr, bul.getCollisionCircle()) {
+				bul.executeCollisionWith(plr)
+				plr.executeCollisionWith(bul)
 			}
 		}
 	}

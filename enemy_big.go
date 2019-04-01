@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -17,6 +18,7 @@ const (
 )
 
 type enemyBig struct {
+	renderer        *sdl.Renderer
 	tex             *sdl.Texture
 	texHit          *sdl.Texture
 	x, y            float64
@@ -29,20 +31,54 @@ type enemyBig struct {
 	hitCount        int8
 }
 
-func newenemyBig(renderer *sdl.Renderer, x, y float64) (e enemyBig) {
+func newEnemyBig(renderer *sdl.Renderer, x, y float64) *enemyBig {
 
-	e.tex = newTexture(renderer, "sprites/enemy-big.png")
-	e.texHit = newTexture(renderer, "sprites/enemy-big-hit.png")
-	e.x = x
-	e.y = y
-	e.active = false
+	en := enemyBig{
+		renderer: renderer,
+		tex:      newTexture(renderer, "sprites/enemy-big.png"),
+		texHit:   newTexture(renderer, "sprites/enemy-big-hit.png"),
+		texXPos:  0,
+		x:        x,
+		y:        y,
+		active:   false}
 
-	e.texXPos = 0
-
-	return e
+	return &en
 }
 
-func (e *enemyBig) draw(renderer *sdl.Renderer) {
+func (e *enemyBig) start(x, y, angle, speed float64, entityType int8) {
+
+	// TODO receive values
+	e.x = float64(rand.Intn(screenWidth))
+	e.y = -30
+	e.hitCount = 0
+	e.active = true
+}
+
+func (e *enemyBig) executeCollisionWith(other entity) {
+
+	if other.getType() == entityTypePlayerBullet {
+		e.beHit()
+	} else if other.getType() == entityTypePlayer {
+		e.beDestroyed()
+	}
+}
+
+func (e *enemyBig) getCollisionCircle() circle {
+
+	return circle{x: e.x, y: e.y, radius: enemyBigCollisionRadius}
+}
+
+func (e *enemyBig) isActive() bool {
+
+	return e.active
+}
+
+func (e *enemyBig) getType() int8 {
+
+	return entityTypeEnemyBig
+}
+
+func (e *enemyBig) draw() {
 
 	if !e.active {
 		return
@@ -62,7 +98,7 @@ func (e *enemyBig) draw(renderer *sdl.Renderer) {
 
 	xTex := e.texXPos * enemyBigSize
 
-	renderer.CopyEx(tex,
+	e.renderer.CopyEx(tex,
 		&sdl.Rect{X: xTex, Y: 0, W: enemyBigSize, H: enemyBigSize},
 		&drawRect,
 		0,
@@ -71,13 +107,13 @@ func (e *enemyBig) draw(renderer *sdl.Renderer) {
 
 	if deb.active {
 		// debug drawRect
-		renderer.SetDrawColor(255, 0, 0, 255)
-		renderer.DrawRect(&drawRect)
+		e.renderer.SetDrawColor(255, 0, 0, 255)
+		e.renderer.DrawRect(&drawRect)
 
 		// debug rect of collision
 		collisionRect := sdl.Rect{X: int32(e.x - enemyBigCollisionRadius), Y: int32(e.y - enemyBigCollisionRadius),
 			W: enemyBigCollisionRadius * 2, H: enemyBigCollisionRadius * 2}
-		renderer.DrawRect(&collisionRect)
+		e.renderer.DrawRect(&collisionRect)
 	}
 }
 
@@ -137,31 +173,39 @@ func (e *enemyBig) shoot() {
 		chunkLaser.Play(1, 0)
 		bul := bulletFromPool()
 		if bul != nil {
-			angle := angleOfLine(e.x, e.y, plr.x, plr.y)
-			bul.start(e.x, e.y, angle, enemyBigBulletSpeed, false)
+			p, ok := plr.(*player)
+			if ok {
+				angle := angleOfLine(e.x, e.y, p.x, p.y)
+				bul.start(e.x, e.y, angle, enemyBigBulletSpeed, entityTypeEnemyBullet)
+			}
 			e.lastTimeShot = time.Now()
 		}
 	}
 }
 
-var enemiesBig []*enemyBig
+func (e *enemyBig) deactivate() {
+
+	e.active = false
+}
+
+var enemiesBig []entity
 
 func initEnemiesBig(renderer *sdl.Renderer) {
 	for i := 0; i < 20; i++ {
-		en := newenemyBig(renderer, screenWidth/2+enemyBigSize, -1*enemyBigSize)
-		enemiesBig = append(enemiesBig, &en)
+		en := newEnemyBig(renderer, screenWidth/2+enemyBigSize, -1*enemyBigSize)
+		enemiesBig = append(enemiesBig, en)
 	}
 }
 
 func deactivateAllEnemiesBig() {
 	for _, en := range enemiesBig {
-		en.active = false
+		en.deactivate()
 	}
 }
 
-func enemyBigFromPool() *enemyBig {
+func enemyBigFromPool() entity {
 	for _, en := range enemiesBig {
-		if !en.active {
+		if !en.isActive() {
 			return en
 		}
 	}

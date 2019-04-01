@@ -69,10 +69,8 @@ func (ef *enemyFleet) releaseBig() {
 
 	en := enemyBigFromPool()
 	if en != nil {
-		en.x = float64(rand.Intn(screenWidth))
-		en.y = -30
-		en.hitCount = 0
-		en.active = true
+		// TODO send data
+		en.start(0, 0, 0, 0, 0)
 	}
 }
 
@@ -91,7 +89,12 @@ func (ef *enemyFleet) releaseSmall() {
 
 	en := enemySmallFromPool()
 	if en != nil {
-		en.start(ef.smallReleased, ef.smallFase, ef.smallFaseX, -30)
+		enSmall, ok := en.(*enemySmall)
+		if ok {
+			enSmall.index = ef.smallReleased
+			enSmall.fase = ef.smallFase
+		}
+		en.start(ef.smallFaseX, -30, 0, 0, 0)
 		ef.smallReleased++
 	}
 }
@@ -109,11 +112,12 @@ func (ef *enemyFleet) askRestartLevel() {
 }
 
 func (ef *enemyFleet) restartLevel() {
+
 	deactivateAllBullets()
 	deactivateAllEnemiesBig()
 	ef.smallFase = 0
 	ef.mustRestartLevel = false
-	plr.start()
+	plr.start(0, 0, 0, 0, 0)
 }
 
 func (ef *enemyFleet) askGoToMenu() {

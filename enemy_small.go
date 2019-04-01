@@ -16,6 +16,7 @@ const (
 )
 
 type enemySmall struct {
+	renderer           *sdl.Renderer
 	tex                *sdl.Texture
 	initX, x, y, angle float64
 	active             bool
@@ -26,21 +27,22 @@ type enemySmall struct {
 	fase               int8
 }
 
-func newEnemySmall(renderer *sdl.Renderer, x, y float64) (e enemySmall) {
+func newEnemySmall(renderer *sdl.Renderer, x, y float64) *enemySmall {
 
-	e.tex = newTexture(renderer, "sprites/enemy-small.png")
-	e.x = x
-	e.initX = x
-	e.y = y
-	e.angle = -90
-	e.active = false
+	enemy := enemySmall{
+		renderer: renderer,
+		tex:      newTexture(renderer, "sprites/enemy-small.png"),
+		x:        x,
+		initX:    x,
+		y:        y,
+		angle:    -90,
+		active:   false,
+		texXPos:  0}
 
-	e.texXPos = 0
-
-	return e
+	return &enemy
 }
 
-func (e *enemySmall) draw(renderer *sdl.Renderer) {
+func (e *enemySmall) draw() {
 
 	if !e.active {
 		return
@@ -53,7 +55,7 @@ func (e *enemySmall) draw(renderer *sdl.Renderer) {
 
 	xTex := e.texXPos * enemySmallSize
 
-	renderer.CopyEx(e.tex,
+	e.renderer.CopyEx(e.tex,
 		&sdl.Rect{X: xTex, Y: 0, W: enemySmallSize, H: enemySmallSize},
 		&drawRect,
 		(e.angle*-1)-90,
@@ -61,18 +63,20 @@ func (e *enemySmall) draw(renderer *sdl.Renderer) {
 		sdl.FLIP_NONE)
 
 	if deb.active {
+
+		//fmt.Printf("%v\n", drawRect)
 		// debug drawRect
-		renderer.SetDrawColor(255, 0, 0, 255)
-		renderer.DrawRect(&drawRect)
+		e.renderer.SetDrawColor(255, 0, 0, 255)
+		e.renderer.DrawRect(&drawRect)
 
 		// debug rect of collision
 		collisionRect := sdl.Rect{X: int32(e.x - enemySmallCollisionRadius), Y: int32(e.y - enemySmallCollisionRadius),
 			W: enemySmallCollisionRadius * 2, H: enemySmallCollisionRadius * 2}
-		renderer.DrawRect(&collisionRect)
+		e.renderer.DrawRect(&collisionRect)
 
 		// debug e.initX
-		renderer.SetDrawColor(0, 0, 255, 255)
-		renderer.DrawLine(int32(e.initX), 0, int32(e.initX), screenHeight)
+		e.renderer.SetDrawColor(0, 0, 255, 255)
+		e.renderer.DrawLine(int32(e.initX), 0, int32(e.initX), screenHeight)
 	}
 }
 
@@ -122,10 +126,8 @@ func (e *enemySmall) update() {
 	}
 }
 
-func (e *enemySmall) start(index, fase int8, x, y float64) {
+func (e *enemySmall) start(x, y, angle, speed float64, entityType int8) {
 
-	e.index = index
-	e.fase = fase
 	e.angle = 0
 	e.x = x
 	e.initX = x
@@ -147,24 +149,53 @@ func (e *enemySmall) beDestroyed() {
 	ex.start(e.x, e.y, enemySmallSpeed)
 }
 
-var enemiesSmall []*enemySmall
+func (e *enemySmall) executeCollisionWith(other entity) {
+
+	if other.getType() == entityTypePlayerBullet {
+		e.beDestroyed()
+	} else if other.getType() == entityTypePlayer {
+		e.beDestroyed()
+	}
+}
+
+func (e *enemySmall) getCollisionCircle() circle {
+
+	return circle{x: e.x, y: e.y, radius: enemySmallCollisionRadius}
+}
+
+func (e *enemySmall) isActive() bool {
+
+	return e.active
+}
+
+func (e *enemySmall) getType() int8 {
+
+	return entityTypeEnemySmall
+}
+
+func (e *enemySmall) deactivate() {
+
+	e.active = false
+}
+
+var enemiesSmall []entity
 
 func initEnemiesSmall(renderer *sdl.Renderer) {
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 80; i++ {
 		en := newEnemySmall(renderer, screenWidth/2+enemySmallSize, -1*enemySmallSize)
-		enemiesSmall = append(enemiesSmall, &en)
+		enemiesSmall = append(enemiesSmall, en)
 	}
 }
 
 func deactivateAllEnemiesSmall() {
 	for _, en := range enemiesSmall {
-		en.active = false
+		en.deactivate()
 	}
 }
 
-func enemySmallFromPool() *enemySmall {
+func enemySmallFromPool() entity {
 	for _, en := range enemiesSmall {
-		if !en.active {
+		if !en.isActive() {
 			return en
 		}
 	}

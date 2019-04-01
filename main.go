@@ -11,10 +11,10 @@ import (
 const (
 	//screenWidth  = 640
 	//screenHeight = 480
-	screenWidth  = 1536
-	screenHeight = 864
-	//screenWidth          = 800
-	//screenHeight         = 600
+	//screenWidth  = 1536
+	//screenHeight = 864
+	screenWidth          = 800
+	screenHeight         = 600
 	targetTicksPerSecond = 60
 	millisByFrame        = (uint32)(1000 / targetTicksPerSecond)
 	scale                = 2
@@ -25,7 +25,7 @@ var delta float64
 var joy *sdl.Joystick
 var score scoreboard
 var deb debug
-var plr player
+var plr entity
 var efleet enemyFleet
 var gameStarted bool
 
@@ -110,7 +110,7 @@ func main() {
 	efleet = newEnemyFleet()
 	efleet.startLevel(1)
 
-	plr.start()
+	plr.start(0, 0, 0, 0, 0)
 
 	w, h, err := renderer.GetOutputSize()
 	if err != nil {
@@ -156,15 +156,15 @@ func main() {
 				continue
 			}
 
-			plr.draw(renderer)
+			plr.draw()
 			plr.update()
 			efleet.update()
 			for _, en := range enemiesBig {
-				en.draw(renderer)
+				en.draw()
 				en.update()
 			}
 			for _, en := range enemiesSmall {
-				en.draw(renderer)
+				en.draw()
 				en.update()
 			}
 			for _, ex := range explosions {
@@ -173,7 +173,7 @@ func main() {
 			}
 
 			for _, bul := range bulletPool {
-				bul.draw(renderer)
+				bul.draw()
 				bul.update()
 			}
 			score.draw(renderer)

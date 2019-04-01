@@ -150,6 +150,9 @@ func (m *menu) choose() {
 
 	gameStarted = true
 	score.resetPointsP1()
-	plr.replay()
-	plr.start()
+	p, ok := plr.(*player)
+	if ok {
+		p.replay()
+	}
+	plr.start(0, 0, 0, 0, 0)
 }

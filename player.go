@@ -160,17 +160,17 @@ func (p *player) handleKeyboard() {
 
 func (p *player) handleJoystic() {
 
-	if joy.Button(2) > 0 {
+	if joystic0.Button(2) > 0 {
 		p.shoot()
 	}
-	if joy.Axis(0) < -8000 {
+	if joystic0.Axis(0) < -8000 {
 		p.moveLeft()
-	} else if joy.Axis(0) > 8000 {
+	} else if joystic0.Axis(0) > 8000 {
 		p.moveRight()
 	}
-	if joy.Axis(1) < -8000 {
+	if joystic0.Axis(1) < -8000 {
 		p.moveUp()
-	} else if joy.Axis(1) > 8000 {
+	} else if joystic0.Axis(1) > 8000 {
 		p.moveDown()
 	}
 }

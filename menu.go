@@ -117,13 +117,13 @@ func (m *menu) handleKeyboard() {
 
 func (m *menu) handleJoystic() {
 
-	if joy.Axis(1) < -8000 {
+	if joystic0.Axis(1) < -8000 {
 		m.moveUp()
-	} else if joy.Axis(1) > 8000 {
+	} else if joystic0.Axis(1) > 8000 {
 		m.moveDown()
 	}
 
-	if joy.Button(1) > 0 {
+	if joystic0.Button(1) > 0 {
 		m.choose()
 	}
 }

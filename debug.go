@@ -5,10 +5,10 @@ import (
 )
 
 type debug struct {
-	texs     [5]*sdl.Texture
+	texs     [8]*sdl.Texture
 	x, y     float64
 	renderer *sdl.Renderer
-	values   [5]string
+	values   [8]string
 	active   bool
 }
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -25,6 +26,8 @@ type enemyFleet struct {
 	smallFaseX               float64
 	smallReleased            int8
 	smallFase                int8
+	level                    int8
+	position                 float64
 }
 
 func newEnemyFleet() (ef enemyFleet) {
@@ -33,6 +36,10 @@ func newEnemyFleet() (ef enemyFleet) {
 }
 
 func (ef *enemyFleet) update() {
+
+	ef.position += delta
+
+	deb.set(5, fmt.Sprintf("position %f", ef.position))
 
 	if time.Since(ef.lastTimeReleaseBig) >= fleetReleaseBigCooldown {
 		ef.releaseBig()

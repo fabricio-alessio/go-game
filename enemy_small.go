@@ -143,7 +143,7 @@ func (e *enemySmall) beHit() {
 func (e *enemySmall) beDestroyed() {
 
 	score.incrementPointsP1(1)
-	chunkExplosion.Play(2, 0)
+	mixer.playSound("explosion")
 	e.active = false
 	ex := explosionFromPool()
 	ex.start(e.x, e.y, enemySmallSpeed)

@@ -149,7 +149,7 @@ func (e *enemyBig) update() {
 func (e *enemyBig) beHit() {
 
 	score.incrementPointsP1(1)
-	chunkHit.Play(0, 0)
+	mixer.playSound("hit")
 	e.hit = true
 	e.hitCount++
 	e.lastTimeHit = time.Now()
@@ -161,7 +161,7 @@ func (e *enemyBig) beHit() {
 
 func (e *enemyBig) beDestroyed() {
 
-	chunkExplosion.Play(2, 0)
+	mixer.playSound("explosion")
 	e.active = false
 	ex := explosionFromPool()
 	ex.start(e.x, e.y, enemyBigSpeed)
@@ -170,7 +170,7 @@ func (e *enemyBig) beDestroyed() {
 func (e *enemyBig) shoot() {
 
 	if time.Since(e.lastTimeShot) >= enemyBigShotCooldown {
-		chunkLaser.Play(1, 0)
+		mixer.playSound("laser")
 		bul := bulletFromPool()
 		if bul != nil {
 			p, ok := plr.(*player)

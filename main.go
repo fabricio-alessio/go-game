@@ -9,12 +9,12 @@ import (
 const (
 	//screenWidth  = 640
 	//screenHeight = 480
-	screenWidth  = 1536
-	screenHeight = 864
-	//screenWidth  = 800
-	//screenHeight = 600
-	scale = 2
-	fps   = 60
+	//screenWidth  = 1536
+	//screenHeight = 864
+	screenWidth  = 800
+	screenHeight = 600
+	scale        = 2
+	fps          = 60
 )
 
 var delta float64
@@ -23,14 +23,20 @@ var deb debug
 var plr entity
 var efleet enemyFleet
 var gameStarted bool
+var mixer *soundManager
 
 func main() {
 
 	initSdl()
 	initJoystic(0)
 	initSounds()
+	mixer = newSoundManager()
+	mixer.loadSound("hit", "sounds/hit.wav")
+	mixer.loadSound("laser", "sounds/laser.wav")
+	//mixer.loadSound("enemyLaser", "sounds/laser.wav")
+	mixer.loadSound("explosion", "sounds/explosion.wav")
 	initFonts()
-	var window, renderer = initScreen("Game", screenWidth, screenHeight, true)
+	var window, renderer = initScreen("Game", screenWidth, screenHeight, false)
 	defer window.Destroy()
 	defer renderer.Destroy()
 

@@ -126,7 +126,7 @@ func (p *player) moveCenter() {
 
 func (p *player) shoot() {
 	if time.Since(p.lastTimeShot) >= playerShotCooldown {
-		chunkLaser.Play(1, 0)
+		mixer.playSound("laser")
 		bul := bulletFromPool()
 		if bul != nil {
 			bul.start(p.x, p.y, 270*(math.Pi/180), playerBulletSpeed, entityTypePlayerBullet)
@@ -205,7 +205,7 @@ func (p *player) update() {
 func (p *player) beHit() {
 
 	p.setShield(p.shield - 1)
-	chunkHit.Play(0, 0)
+	mixer.playSound("hit")
 
 	if p.shield <= 0 {
 		p.beDestroyed()
@@ -215,7 +215,7 @@ func (p *player) beHit() {
 
 func (p *player) beDestroyed() {
 
-	chunkExplosion.Play(2, 0)
+	mixer.playSound("explosion")
 	p.setLives(p.lives - 1)
 	ex := explosionFromPool()
 	ex.start(p.x, p.y, enemyBigSpeed)

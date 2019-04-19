@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -142,6 +143,7 @@ func (e *enemyBig) update() {
 
 	e.y += eSpeed
 	if e.y > screenHeight {
+		fmt.Println("Send big enemy back to poll")
 		e.active = false
 	}
 }

@@ -68,4 +68,13 @@ func checkCollisionsPlayer() {
 			}
 		}
 	}
+
+	for _, pu := range powerUps {
+		if pu.isActive() {
+			if collides(pu.getCollisionCircle(), cPlr) {
+				pu.executeCollisionWith(plr)
+				plr.executeCollisionWith(pu)
+			}
+		}
+	}
 }

@@ -13,18 +13,24 @@ const (
 	enemySmallSize            = 16
 	enemySmallCollisionRadius = 16
 	enemySmallRadius          = 30
+	enemySmallValCount        = 4
+	enemySmallValH            = 8
 )
 
+var enemyVariations = [enemySmallValCount][enemySmallValH]float64{
+	{0, 1, -1, -1, 1, 1, 0, 0},
+	{0, -1, 1, 1, -1, -1, 0, 0},
+	{0, 1, 0, -1, 0, 1, 0, -1},
+	{0, -1, 0, 1, 0, -1, 0, 1}}
+
 type enemySmall struct {
-	renderer           *sdl.Renderer
-	tex                *sdl.Texture
-	initX, x, y, angle float64
-	active             bool
-	texXPos            int32
-	lastTimeBooster    time.Time
-	index              int8
-	turnLeft           bool
-	fase               int8
+	renderer        *sdl.Renderer
+	tex             *sdl.Texture
+	x, y, angle     float64
+	active          bool
+	texXPos         int32
+	lastTimeBooster time.Time
+	group           *enemyGroup
 }
 
 func newEnemySmall(renderer *sdl.Renderer, x, y float64) *enemySmall {
@@ -33,9 +39,8 @@ func newEnemySmall(renderer *sdl.Renderer, x, y float64) *enemySmall {
 		renderer: renderer,
 		tex:      newTexture(renderer, "sprites/enemy-small.png"),
 		x:        x,
-		initX:    x,
 		y:        y,
-		angle:    -90,
+		angle:    270,
 		active:   false,
 		texXPos:  0}
 
@@ -64,7 +69,6 @@ func (e *enemySmall) draw() {
 
 	if deb.active {
 
-		//fmt.Printf("%v\n", drawRect)
 		// debug drawRect
 		e.renderer.SetDrawColor(255, 0, 0, 255)
 		e.renderer.DrawRect(&drawRect)
@@ -73,10 +77,6 @@ func (e *enemySmall) draw() {
 		collisionRect := sdl.Rect{X: int32(e.x - enemySmallCollisionRadius), Y: int32(e.y - enemySmallCollisionRadius),
 			W: enemySmallCollisionRadius * 2, H: enemySmallCollisionRadius * 2}
 		e.renderer.DrawRect(&collisionRect)
-
-		// debug e.initX
-		e.renderer.SetDrawColor(0, 0, 255, 255)
-		e.renderer.DrawLine(int32(e.initX), 0, int32(e.initX), screenHeight)
 	}
 }
 
@@ -95,42 +95,28 @@ func (e *enemySmall) update() {
 		e.lastTimeBooster = time.Now()
 	}
 
-	eSpeed := enemySmallSpeed * 2 * delta
+	step := screenHeight / enemySmallValH
+	e.y += enemySmallSpeed * delta
+	index := int(e.y / float64(step))
 
-	if e.turnLeft {
-		e.angle += eSpeed / 2
-		if e.angle >= 45 {
-			e.turnLeft = false
-		}
-	} else {
-		e.angle -= eSpeed / 2
-		if e.angle <= -225 {
-			e.turnLeft = true
-		}
+	if index >= 0 && index < enemySmallValH {
+		e.angle += delta * enemyVariations[e.group.variationIndex][index]
 	}
 
 	radiansAngle := e.angle * math.Pi / 180
-	xSpeed := 5 * delta * math.Cos(radiansAngle)
-	ySpeed := 5 * delta * math.Sin(radiansAngle*-1)
+	e.x += 2 * math.Cos(radiansAngle)
 
-	e.x += xSpeed
-	e.y += ySpeed
 	if e.y > screenHeight {
+		fmt.Println("Send small enemy back to poll")
 		e.active = false
-	}
-
-	if e.index == 0 {
-		deb.set(2, fmt.Sprintf("angle %f", e.angle))
-		deb.set(3, fmt.Sprintf("e.x %f", e.x))
-		deb.set(4, fmt.Sprintf("e.y %f", e.y))
 	}
 }
 
 func (e *enemySmall) start(x, y, angle, speed float64, entityType int8) {
 
-	e.angle = 0
+	fmt.Println("Enemy small start")
+	e.angle = 270
 	e.x = x
-	e.initX = x
 	e.y = y
 	e.active = true
 }
@@ -145,6 +131,12 @@ func (e *enemySmall) beDestroyed() {
 	score.incrementPointsP1(1)
 	mixer.playSound("explosion")
 	e.active = false
+	e.group.aliveCount--
+	if e.group.aliveCount == 0 {
+		fmt.Println("All small group dead")
+		pu := powerUpFromPool()
+		pu.start(e.x, 0, 0, 0, 0)
+	}
 	ex := explosionFromPool()
 	ex.start(e.x, e.y, enemySmallSpeed)
 }
@@ -184,12 +176,6 @@ func initEnemiesSmall(renderer *sdl.Renderer) {
 	for i := 0; i < 80; i++ {
 		en := newEnemySmall(renderer, screenWidth/2+enemySmallSize, -1*enemySmallSize)
 		enemiesSmall = append(enemiesSmall, en)
-	}
-}
-
-func deactivateAllEnemiesSmall() {
-	for _, en := range enemiesSmall {
-		en.deactivate()
 	}
 }
 

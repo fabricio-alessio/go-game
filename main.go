@@ -33,8 +33,8 @@ func main() {
 	mixer = newSoundManager()
 	mixer.loadSound("hit", "sounds/hit.wav")
 	mixer.loadSound("laser", "sounds/laser.wav")
-	//mixer.loadSound("enemyLaser", "sounds/laser.wav")
 	mixer.loadSound("explosion", "sounds/explosion.wav")
+	mixer.loadSound("powerUp", "sounds/powerUp.wav")
 	initFonts()
 	var window, renderer = initScreen("Game", screenWidth, screenHeight, false)
 	defer window.Destroy()
@@ -49,6 +49,7 @@ func main() {
 	initEnemiesSmall(renderer)
 	initExplosions(renderer)
 	initBulletPool(renderer)
+	initPowerUps(renderer)
 	efleet = newEnemyFleet()
 	efleet.startLevel(1)
 
@@ -111,6 +112,11 @@ func main() {
 			for _, bul := range bulletPool {
 				bul.draw()
 				bul.update()
+			}
+
+			for _, pu := range powerUps {
+				pu.draw()
+				pu.update()
 			}
 			score.draw(renderer)
 			deb.draw(renderer)

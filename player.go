@@ -33,6 +33,7 @@ type player struct {
 	shield          int8
 	active          bool
 	starting        bool
+	power           int8
 }
 
 func newPlayer(renderer *sdl.Renderer) *player {
@@ -44,7 +45,8 @@ func newPlayer(renderer *sdl.Renderer) *player {
 		y:        screenHeight - (playerHeight * scale),
 		texXPos:  2,
 		texYPos:  1,
-		active:   true}
+		active:   true,
+		power:    0}
 
 	plr.setLives(playerInitialLives)
 	plr.setShield(playerMaxShield)
@@ -127,11 +129,30 @@ func (p *player) moveCenter() {
 func (p *player) shoot() {
 	if time.Since(p.lastTimeShot) >= playerShotCooldown {
 		mixer.playSound("laser")
-		bul := bulletFromPool()
-		if bul != nil {
-			bul.start(p.x, p.y, 270*(math.Pi/180), playerBulletSpeed, entityTypePlayerBullet)
-			p.lastTimeShot = time.Now()
+		if p.power == 0 {
+			startBullet(p.x, p.y, 270*(math.Pi/180))
+		} else if p.power == 1 {
+			startBullet(p.x-10, p.y, 270*(math.Pi/180))
+			startBullet(p.x+10, p.y, 270*(math.Pi/180))
+		} else if p.power == 2 {
+			startBullet(p.x-15, p.y, 255*(math.Pi/180))
+			startBullet(p.x, p.y, 270*(math.Pi/180))
+			startBullet(p.x+15, p.y, 285*(math.Pi/180))
+		} else if p.power >= 3 {
+			startBullet(p.x-20, p.y, 240*(math.Pi/180))
+			startBullet(p.x-15, p.y, 255*(math.Pi/180))
+			startBullet(p.x, p.y, 270*(math.Pi/180))
+			startBullet(p.x+15, p.y, 285*(math.Pi/180))
+			startBullet(p.x+20, p.y, 300*(math.Pi/180))
 		}
+		p.lastTimeShot = time.Now()
+	}
+}
+
+func startBullet(x, y, angle float64) {
+	bul := bulletFromPool()
+	if bul != nil {
+		bul.start(x, y, angle, playerBulletSpeed, entityTypePlayerBullet)
 	}
 }
 
@@ -254,6 +275,7 @@ func (p *player) start(x, y, angle, speed float64, entityType int8) {
 	p.texXPos = 2
 	p.texYPos = 1
 	p.starting = true
+	p.power = 0
 }
 
 func (p *player) executeCollisionWith(other entity) {
@@ -264,7 +286,15 @@ func (p *player) executeCollisionWith(other entity) {
 		p.beDestroyed()
 	} else if other.getType() == entityTypeEnemySmall {
 		p.beDestroyed()
+	} else if other.getType() == entityTypePowerUp {
+		p.powerUp()
 	}
+}
+
+func (p *player) powerUp() {
+
+	p.power++
+	score.incrementPointsP1(5)
 }
 
 func (p *player) getCollisionCircle() circle {

@@ -10,53 +10,54 @@ const (
 	fleetReleaseBigCooldown       = time.Millisecond * 4677
 	fleetTimeToExecuteRestarLevel = time.Millisecond * 3000
 	fleetReleaseSmallCooldown     = time.Millisecond * 250
-	fleetReleaseSmallFaseCooldown = time.Millisecond * 13452
 	fleetReleaseSmallMax          = 10
 )
 
+type attack struct {
+	distance  float64
+	quantity  int
+	enemyType int8
+}
+
 type enemyFleet struct {
-	lastTimeReleaseBig       time.Time
-	timeAskRestartLevel      time.Time
-	timeAskGoToMenu          time.Time
-	lastTimeReleaseSmall     time.Time
-	lastTimeReleaseSmallFase time.Time
-	actualLevel              int8
-	mustRestartLevel         bool
-	mustGoToMenu             bool
-	smallFaseX               float64
-	smallReleased            int8
-	smallFase                int8
-	level                    int8
-	position                 float64
+	lastTimeReleaseBig   time.Time
+	timeAskRestartLevel  time.Time
+	timeAskGoToMenu      time.Time
+	lastTimeReleaseSmall time.Time
+	actualLevel          int8
+	mustRestartLevel     bool
+	mustGoToMenu         bool
+	level                int8
+	position             float64
+	fleetAttacks         []attack
+	attackNumber         int
 }
 
 func newEnemyFleet() (ef enemyFleet) {
 
+	//a0 := attack{distance: 230, quantity: 2, enemyType: entityTypeEnemyBig}
+	//ef.fleetAttacks = append(ef.fleetAttacks, a0)
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 2, enemyType: entityTypeEnemySmall})
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 2, enemyType: entityTypeEnemyBig})
+	//a2 := attack{distance: 200, quantity: 1, enemyType: entityTypeEnemySmall}
+	//ef.fleetAttacks = append(ef.fleetAttacks, a2)
+	//a3 := attack{distance: 200, quantity: 1, enemyType: entityTypeEnemySmall}
+	//ef.fleetAttacks = append(ef.fleetAttacks, a3)
+	//a4 := attack{distance: 120, quantity: 3, enemyType: entityTypeEnemySmall}
+	//ef.fleetAttacks = append(ef.fleetAttacks, a4)
 	return ef
 }
 
 func (ef *enemyFleet) update() {
 
 	ef.position += delta
-
+	someAttack := ef.fleetAttacks[ef.attackNumber]
 	deb.set(5, fmt.Sprintf("position %f", ef.position))
 
-	if time.Since(ef.lastTimeReleaseBig) >= fleetReleaseBigCooldown {
-		ef.releaseBig()
-
-		ef.lastTimeReleaseBig = time.Now()
-	}
-
-	if time.Since(ef.lastTimeReleaseSmallFase) >= fleetReleaseSmallFaseCooldown {
-		ef.releaseSmallFase()
-
-		ef.lastTimeReleaseSmallFase = time.Now()
-	}
-
-	if time.Since(ef.lastTimeReleaseSmall) >= fleetReleaseSmallCooldown {
-		ef.releaseSmall()
-
-		ef.lastTimeReleaseSmall = time.Now()
+	if ef.position > someAttack.distance {
+		ef.releaseAttack(someAttack)
+		ef.position = 0
+		ef.prepareNextAttack()
 	}
 
 	if ef.mustRestartLevel {
@@ -72,6 +73,27 @@ func (ef *enemyFleet) update() {
 	}
 }
 
+func (ef *enemyFleet) prepareNextAttack() {
+
+	if ef.attackNumber+1 >= len(ef.fleetAttacks) {
+		ef.attackNumber = 0
+	} else {
+		ef.attackNumber++
+	}
+}
+
+func (ef *enemyFleet) releaseAttack(someAttack attack) {
+
+	fmt.Printf("Attack %s released %d times, sequency %d\n", getNameOfType(someAttack.enemyType), someAttack.quantity, ef.attackNumber)
+	for i := 0; i < someAttack.quantity; i++ {
+		if someAttack.enemyType == entityTypeEnemyBig {
+			ef.releaseBig()
+		} else if someAttack.enemyType == entityTypeEnemySmall {
+			ef.releaseSmall()
+		}
+	}
+}
+
 func (ef *enemyFleet) releaseBig() {
 
 	en := enemyBigFromPool()
@@ -81,35 +103,28 @@ func (ef *enemyFleet) releaseBig() {
 	}
 }
 
-func (ef *enemyFleet) releaseSmallFase() {
-
-	ef.smallFaseX = float64(rand.Intn(screenWidth-400) + 400)
-	ef.smallReleased = 0
-	ef.smallFase++
-}
-
 func (ef *enemyFleet) releaseSmall() {
 
-	if ef.smallReleased >= fleetReleaseSmallMax {
-		return
-	}
+	x := float64(rand.Intn(screenWidth-400) + 400)
+	group := enemyGroup{
+		aliveCount:     6,
+		variationIndex: rand.Intn(enemySmallValCount)}
 
-	en := enemySmallFromPool()
-	if en != nil {
-		enSmall, ok := en.(*enemySmall)
-		if ok {
-			enSmall.index = ef.smallReleased
-			enSmall.fase = ef.smallFase
+	for i := 0; i < 6; i++ {
+		en := enemySmallFromPool()
+		if en != nil {
+			enSmall, ok := en.(*enemySmall)
+			if ok {
+				enSmall.group = &group
+			}
+			en.start(x, float64(-30-(i*40)), 0, 0, 0)
 		}
-		en.start(ef.smallFaseX, -30, 0, 0, 0)
-		ef.smallReleased++
 	}
 }
 
 func (ef *enemyFleet) startLevel(level int8) {
 
 	ef.actualLevel = level
-	ef.smallFase = 0
 }
 
 func (ef *enemyFleet) askRestartLevel() {
@@ -122,7 +137,6 @@ func (ef *enemyFleet) restartLevel() {
 
 	deactivateAllBullets()
 	deactivateAllEnemiesBig()
-	ef.smallFase = 0
 	ef.mustRestartLevel = false
 	plr.start(0, 0, 0, 0, 0)
 }
@@ -136,7 +150,6 @@ func (ef *enemyFleet) askGoToMenu() {
 func (ef *enemyFleet) goToMenu() {
 	deactivateAllBullets()
 	deactivateAllEnemiesBig()
-	ef.smallFase = 0
 	ef.mustGoToMenu = false
 	gameStarted = false
 }

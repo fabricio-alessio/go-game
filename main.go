@@ -32,7 +32,7 @@ func main() {
 	initSounds()
 	mixer = newSoundManager()
 	mixer.loadSound("hit", "sounds/hit.wav")
-	mixer.loadSound("laser", "sounds/laser.wav")
+	mixer.loadSound("laser", "sounds/laser2.wav")
 	mixer.loadSound("explosion", "sounds/explosion.wav")
 	mixer.loadSound("powerUp", "sounds/powerUp.wav")
 	initFonts()
@@ -47,8 +47,11 @@ func main() {
 
 	initEnemiesBig(renderer)
 	initEnemiesSmall(renderer)
+	initEnemiesExtra(renderer)
+	initEnemiesExtraComming(renderer)
 	initExplosions(renderer)
 	initBulletPool(renderer)
+	initBulletBlastPool(renderer)
 	initPowerUps(renderer)
 	efleet = newEnemyFleet()
 	efleet.startLevel(1)
@@ -93,6 +96,16 @@ func main() {
 				continue
 			}
 
+			for _, en := range enemiesExtraComming {
+				en.draw()
+				en.update()
+			}
+
+			for _, bul := range bulletPool {
+				bul.draw()
+				bul.update()
+			}
+
 			plr.draw()
 			plr.update()
 			efleet.update()
@@ -104,14 +117,19 @@ func main() {
 				en.draw()
 				en.update()
 			}
+			for _, en := range enemiesExtra {
+				en.draw()
+				en.update()
+			}
+
+			for _, bul := range bulletBlastPool {
+				bul.draw()
+				bul.update()
+			}
+
 			for _, ex := range explosions {
 				ex.draw(renderer)
 				ex.update()
-			}
-
-			for _, bul := range bulletPool {
-				bul.draw()
-				bul.update()
 			}
 
 			for _, pu := range powerUps {

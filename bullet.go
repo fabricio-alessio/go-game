@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"math/rand"
 	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -58,13 +59,20 @@ func (b *bullet) getType() int8 {
 
 func (b *bullet) executeCollisionWith(other entity) {
 
-	if b.getType() == entityTypeEnemyBullet && other.getType() == entityTypePlayer {
-		b.deactivate()
-	} else if b.getType() == entityTypePlayerBullet && other.getType() == entityTypeEnemyBig {
-		b.deactivate()
-	} else if b.getType() == entityTypePlayerBullet && other.getType() == entityTypeEnemySmall {
-		b.deactivate()
+	b.deactivate()
+
+	for i := 0; i < 3; i++ {
+		b.startBlast()
 	}
+}
+
+func (b *bullet) startBlast() {
+
+	speedVar := b.speed/2 + rand.Float64()*b.speed
+	blast := bulletBlastFromPool()
+	degreeVar := rand.Intn(90) - 45
+	radVar := float64(degreeVar) * math.Pi / 180
+	blast.start(b.x, b.y, b.angle+radVar, speedVar, 0)
 }
 
 func (b *bullet) draw() {
@@ -141,7 +149,7 @@ var bulletPool []entity
 
 func initBulletPool(renderer *sdl.Renderer) {
 
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 60; i++ {
 		b := newBullet(renderer)
 		bulletPool = append(bulletPool, b)
 	}

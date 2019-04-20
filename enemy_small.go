@@ -179,6 +179,12 @@ func initEnemiesSmall(renderer *sdl.Renderer) {
 	}
 }
 
+func deactivateAllEnemiesSmall() {
+	for _, en := range enemiesSmall {
+		en.deactivate()
+	}
+}
+
 func enemySmallFromPool() entity {
 	for _, en := range enemiesSmall {
 		if !en.isActive() {

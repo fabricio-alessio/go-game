@@ -35,16 +35,10 @@ type enemyFleet struct {
 
 func newEnemyFleet() (ef enemyFleet) {
 
-	//a0 := attack{distance: 230, quantity: 2, enemyType: entityTypeEnemyBig}
-	//ef.fleetAttacks = append(ef.fleetAttacks, a0)
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 1, enemyType: entityTypeEnemyBig})
 	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 2, enemyType: entityTypeEnemySmall})
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 2, enemyType: entityTypeEnemyExtraComming})
 	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 2, enemyType: entityTypeEnemyBig})
-	//a2 := attack{distance: 200, quantity: 1, enemyType: entityTypeEnemySmall}
-	//ef.fleetAttacks = append(ef.fleetAttacks, a2)
-	//a3 := attack{distance: 200, quantity: 1, enemyType: entityTypeEnemySmall}
-	//ef.fleetAttacks = append(ef.fleetAttacks, a3)
-	//a4 := attack{distance: 120, quantity: 3, enemyType: entityTypeEnemySmall}
-	//ef.fleetAttacks = append(ef.fleetAttacks, a4)
 	return ef
 }
 
@@ -90,6 +84,8 @@ func (ef *enemyFleet) releaseAttack(someAttack attack) {
 			ef.releaseBig()
 		} else if someAttack.enemyType == entityTypeEnemySmall {
 			ef.releaseSmall()
+		} else if someAttack.enemyType == entityTypeEnemyExtraComming {
+			ef.releaseExtraComming()
 		}
 	}
 }
@@ -99,6 +95,14 @@ func (ef *enemyFleet) releaseBig() {
 	en := enemyBigFromPool()
 	if en != nil {
 		// TODO send data
+		en.start(0, 0, 0, 0, 0)
+	}
+}
+
+func (ef *enemyFleet) releaseExtraComming() {
+
+	en := enemyExtraCommingFromPool()
+	if en != nil {
 		en.start(0, 0, 0, 0, 0)
 	}
 }
@@ -136,7 +140,11 @@ func (ef *enemyFleet) askRestartLevel() {
 func (ef *enemyFleet) restartLevel() {
 
 	deactivateAllBullets()
+	deactivateAllBulletBlasts()
 	deactivateAllEnemiesBig()
+	deactivateAllEnemiesSmall()
+	deactivateAllEnemiesExtra()
+	deactivateAllEnemiesExtraComming()
 	ef.mustRestartLevel = false
 	plr.start(0, 0, 0, 0, 0)
 }

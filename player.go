@@ -286,6 +286,8 @@ func (p *player) executeCollisionWith(other entity) {
 		p.beDestroyed()
 	} else if other.getType() == entityTypeEnemySmall {
 		p.beDestroyed()
+	} else if other.getType() == entityTypeEnemyExtra {
+		p.beDestroyed()
 	} else if other.getType() == entityTypePowerUp {
 		p.powerUp()
 	}

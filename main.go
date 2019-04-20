@@ -1,20 +1,15 @@
 package main
 
 import (
+	"os"
 	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 const (
-	//screenWidth  = 640
-	//screenHeight = 480
-	//screenWidth  = 1536
-	//screenHeight = 864
-	screenWidth  = 800
-	screenHeight = 600
-	scale        = 2
-	fps          = 60
+	scale = 2
+	fps   = 60
 )
 
 var delta float64
@@ -24,8 +19,22 @@ var plr entity
 var efleet enemyFleet
 var gameStarted bool
 var mixer *soundManager
+var screenWidth float64
+var screenHeight float64
 
 func main() {
+
+	args := os.Args[1:]
+	var full bool
+	if len(args) > 0 && args[0] == "full" {
+		screenWidth = 1536
+		screenHeight = 864
+		full = true
+	} else {
+		screenWidth = 800
+		screenHeight = 600
+		full = false
+	}
 
 	initSdl()
 	initJoystic(0)
@@ -36,7 +45,7 @@ func main() {
 	mixer.loadSound("explosion", "sounds/explosion.wav")
 	mixer.loadSound("powerUp", "sounds/powerUp.wav")
 	initFonts()
-	var window, renderer = initScreen("Game", screenWidth, screenHeight, false)
+	var window, renderer = initScreen("Game", int32(screenWidth), int32(screenHeight), full)
 	defer window.Destroy()
 	defer renderer.Destroy()
 

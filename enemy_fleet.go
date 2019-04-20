@@ -109,7 +109,7 @@ func (ef *enemyFleet) releaseExtraComming() {
 
 func (ef *enemyFleet) releaseSmall() {
 
-	x := float64(rand.Intn(screenWidth-400) + 400)
+	x := float64(rand.Intn(int(screenWidth)-400) + 400)
 	group := enemyGroup{
 		aliveCount:     6,
 		variationIndex: rand.Intn(enemySmallValCount)}

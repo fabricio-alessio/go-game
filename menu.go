@@ -65,7 +65,7 @@ func (m *menu) update() {
 
 	m.navyX += m.navySpeedX * m.navyDirection * delta
 
-	border := float64(screenWidth / 4)
+	border := screenWidth / 4
 	if m.navyX < border {
 		m.navyDirection = 1
 	} else if m.navyX > screenWidth-border {

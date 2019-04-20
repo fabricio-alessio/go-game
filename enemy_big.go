@@ -49,7 +49,7 @@ func newEnemyBig(renderer *sdl.Renderer, x, y float64) *enemyBig {
 func (e *enemyBig) start(x, y, angle, speed float64, entityType int8) {
 
 	// TODO receive values
-	e.x = float64(rand.Intn(screenWidth))
+	e.x = float64(rand.Intn(int(screenWidth)))
 	e.y = -30
 	e.hitCount = 0
 	e.active = true

@@ -37,7 +37,7 @@ func newEnemyExtraComming(renderer *sdl.Renderer, x, y float64) *enemyExtraCommi
 
 func (e *enemyExtraComming) start(x, y, angle, speed float64, entityType int8) {
 
-	e.x = float64(rand.Intn(screenWidth))
+	e.x = float64(rand.Intn(int(screenWidth)))
 	e.y = screenHeight + 30
 	e.active = true
 }

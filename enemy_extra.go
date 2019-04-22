@@ -157,6 +157,8 @@ func (e *enemyExtra) beDestroyed() {
 	e.active = false
 	ex := explosionFromPool()
 	ex.start(e.x, e.y, enemyExtraSpeed)
+	pu := powerUpFromPool()
+	pu.start(e.x, 0, 0, 0, entityTypePowerUpHelper)
 }
 
 func (e *enemyExtra) shoot() {

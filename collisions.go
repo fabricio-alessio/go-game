@@ -72,6 +72,15 @@ func checkCollisionsPlayer() {
 		}
 	}
 
+	for _, en := range bombs {
+		if en.isActive() {
+			if collides(en.getCollisionCircle(), cPlr) {
+				en.executeCollisionWith(plr)
+				plr.executeCollisionWith(en)
+			}
+		}
+	}
+
 	for _, bul := range bulletPool {
 		if bul.isActive() && bul.getType() == entityTypeEnemyBullet {
 			if collides(cPlr, bul.getCollisionCircle()) {

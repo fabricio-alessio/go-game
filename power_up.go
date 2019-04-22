@@ -20,6 +20,7 @@ type powerUp struct {
 	active          bool
 	texXPos         int32
 	lastTimeBooster time.Time
+	entityType      int8
 }
 
 func newPowerUp(renderer *sdl.Renderer, x, y float64) *powerUp {
@@ -47,9 +48,15 @@ func (e *powerUp) draw() {
 	drawRect := sdl.Rect{X: int32(drawX), Y: int32(drawY), W: int32(drawPowerUpSize), H: int32(drawPowerUpSize)}
 
 	xTex := e.texXPos * powerUpSize
+	var yTex int32
+	if e.entityType == entityTypePowerUpBullet {
+		yTex = 0
+	} else {
+		yTex = powerUpSize
+	}
 
 	e.renderer.CopyEx(e.tex,
-		&sdl.Rect{X: xTex, Y: 0, W: powerUpSize, H: powerUpSize},
+		&sdl.Rect{X: xTex, Y: yTex, W: powerUpSize, H: powerUpSize},
 		&drawRect,
 		0,
 		&sdl.Point{X: drawRect.W / 2.0, Y: drawRect.H / 2.0},
@@ -96,13 +103,13 @@ func (e *powerUp) start(x, y, angle, speed float64, entityType int8) {
 	e.x = x
 	e.y = -30
 	e.active = true
+	e.entityType = entityType
 }
 
 func (e *powerUp) beCollected() {
 
-	e.active = false
-	mixer.playSound("powerUp")
 	e.deactivate()
+	mixer.playSound("powerUp")
 }
 
 func (e *powerUp) executeCollisionWith(other entity) {
@@ -124,7 +131,7 @@ func (e *powerUp) isActive() bool {
 
 func (e *powerUp) getType() int8 {
 
-	return entityTypePowerUp
+	return e.entityType
 }
 
 func (e *powerUp) deactivate() {
@@ -135,7 +142,7 @@ func (e *powerUp) deactivate() {
 var powerUps []entity
 
 func initPowerUps(renderer *sdl.Renderer) {
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 30; i++ {
 		en := newPowerUp(renderer, screenWidth/2+powerUpSize, -1*powerUpSize)
 		powerUps = append(powerUps, en)
 	}

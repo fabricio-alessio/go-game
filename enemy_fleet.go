@@ -35,6 +35,11 @@ type enemyFleet struct {
 
 func newEnemyFleet() (ef enemyFleet) {
 
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 100, quantity: 1, enemyType: entityTypeBomb})
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 50, quantity: 1, enemyType: entityTypeBomb})
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 50, quantity: 2, enemyType: entityTypeBomb})
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 50, quantity: 1, enemyType: entityTypeBomb})
+	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 50, quantity: 2, enemyType: entityTypeBomb})
 	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 1, enemyType: entityTypeEnemyBig})
 	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 2, enemyType: entityTypeEnemySmall})
 	ef.fleetAttacks = append(ef.fleetAttacks, attack{distance: 500, quantity: 2, enemyType: entityTypeEnemyExtraComming})
@@ -84,6 +89,8 @@ func (ef *enemyFleet) releaseAttack(someAttack attack) {
 			ef.releaseBig()
 		} else if someAttack.enemyType == entityTypeEnemySmall {
 			ef.releaseSmall()
+		} else if someAttack.enemyType == entityTypeBomb {
+			ef.releaseBomb()
 		} else if someAttack.enemyType == entityTypeEnemyExtraComming {
 			ef.releaseExtraComming()
 		}
@@ -104,6 +111,16 @@ func (ef *enemyFleet) releaseExtraComming() {
 	en := enemyExtraCommingFromPool()
 	if en != nil {
 		en.start(0, 0, 0, 0, 0)
+	}
+}
+
+func (ef *enemyFleet) releaseBomb() {
+
+	x := float64(rand.Intn(int(screenWidth)-40) + 40)
+	en := bombFromPool()
+	if en != nil {
+		// TODO send data
+		en.start(x, 0, 0, 0, 0)
 	}
 }
 

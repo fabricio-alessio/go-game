@@ -12,41 +12,58 @@ const (
 	playerSpeed           = 5
 	playerWidth           = 16
 	playerHeight          = 24
+	playerHelperSize      = 19
 	playerShotCooldown    = time.Millisecond * 250
 	playerCollisionRadius = 16
 	playerBulletSpeed     = 10
 	playerInitialLives    = 3
 	playerMaxShield       = 5
+	playerMovSize         = 500
+	playerMaxHelper       = 3
+	playerMaxPower        = 6
 )
 
+type position struct {
+	x, y, angle float64
+}
+
 type player struct {
-	renderer        *sdl.Renderer
-	tex             *sdl.Texture
-	x, y            float64
-	lastTimeShot    time.Time
-	lastTimeDrive   time.Time
-	lastTimeUndrive time.Time
-	lastTimeBooster time.Time
-	texXPos         int32
-	texYPos         int32
-	lives           int8
-	shield          int8
-	active          bool
-	starting        bool
-	power           int8
+	renderer              *sdl.Renderer
+	tex                   *sdl.Texture
+	x, y                  float64
+	lastTimeShot          time.Time
+	lastTimeDrive         time.Time
+	lastTimeUndrive       time.Time
+	lastTimeBooster       time.Time
+	lastTimeHelperBooster time.Time
+	lastTimeRegisterMov   time.Time
+	texXPos               int32
+	texYPos               int32
+	lives                 int8
+	shield                int8
+	active                bool
+	starting              bool
+	power                 int8
+	moviment              [playerMovSize]position
+	movIndex              int
+	texHelper             *sdl.Texture
+	helperX, helperY      [playerMaxHelper]float64
+	helperCount           int
+	helperTexXPos         int32
 }
 
 func newPlayer(renderer *sdl.Renderer) *player {
 
 	plr := player{
-		renderer: renderer,
-		tex:      newTexture(renderer, "sprites/ship.png"),
-		x:        screenWidth / 2.0,
-		y:        screenHeight - (playerHeight * scale),
-		texXPos:  2,
-		texYPos:  1,
-		active:   true,
-		power:    0}
+		renderer:  renderer,
+		tex:       newTexture(renderer, "sprites/ship.png"),
+		texHelper: newTexture(renderer, "sprites/secundary.png"),
+		x:         screenWidth / 2.0,
+		y:         screenHeight - (playerHeight * scale),
+		texXPos:   2,
+		texYPos:   1,
+		active:    true,
+		power:     0}
 
 	plr.setLives(playerInitialLives)
 	plr.setShield(playerMaxShield)
@@ -83,6 +100,24 @@ func (p *player) draw() {
 			W: playerCollisionRadius * 2, H: playerCollisionRadius * 2}
 		p.renderer.DrawRect(&collisionRect)
 	}
+
+	for i := 0; i < p.helperCount; i++ {
+		p.drawHelper(i)
+	}
+}
+
+func (p *player) drawHelper(index int) {
+
+	helperSize := playerHelperSize * scale
+	drawX := p.helperX[index] - float64(helperSize)/2.0
+	drawY := p.helperY[index] - float64(helperSize)/2.0
+	drawRect := sdl.Rect{X: int32(drawX), Y: int32(drawY), W: int32(helperSize), H: int32(helperSize)}
+
+	xTex := p.helperTexXPos * playerHelperSize
+
+	p.renderer.Copy(p.texHelper,
+		&sdl.Rect{X: xTex, Y: 0, W: playerHelperSize, H: playerHelperSize},
+		&drawRect)
 }
 
 func (p *player) moveUp() {
@@ -144,6 +179,16 @@ func (p *player) shoot() {
 			startBullet(p.x, p.y, 270*(math.Pi/180))
 			startBullet(p.x+15, p.y, 285*(math.Pi/180))
 			startBullet(p.x+20, p.y, 300*(math.Pi/180))
+		}
+		doubleCount := p.power - 3
+		for i := 0; i < p.helperCount; i++ {
+			if doubleCount <= 0 {
+				startBullet(p.helperX[i], p.helperY[i], 270*(math.Pi/180))
+			} else {
+				startBullet(p.helperX[i]-10, p.helperY[i], 270*(math.Pi/180))
+				startBullet(p.helperX[i]+10, p.helperY[i], 270*(math.Pi/180))
+			}
+			doubleCount--
 		}
 		p.lastTimeShot = time.Now()
 	}
@@ -221,6 +266,54 @@ func (p *player) update() {
 		p.handleKeyboard()
 		p.handleJoystic()
 	}
+
+	p.registerMoviment()
+	for i := 0; i < p.helperCount; i++ {
+		p.updateHelper(i)
+	}
+}
+
+func (p *player) registerMoviment() {
+
+	//if time.Since(p.lastTimeRegisterMov) >= playerShotCooldown/8 {
+
+	pos := position{x: p.x, y: p.y, angle: 0}
+	if p.moviment[p.movIndex] != pos {
+		if p.movIndex == playerMovSize-1 {
+			p.movIndex = 0
+		} else {
+			p.movIndex++
+		}
+		p.moviment[p.movIndex] = pos
+	}
+
+	//	p.lastTimeRegisterMov = time.Now()
+	//}
+}
+
+func (p *player) getPositionDelayed(qtd int) position {
+
+	index := p.movIndex - qtd
+	if index < 0 {
+		index = playerMovSize - 1 + index
+	}
+	return p.moviment[index]
+}
+
+func (p *player) updateHelper(index int) {
+
+	pos := p.getPositionDelayed(10 + index*10)
+	p.helperX[index] = pos.x
+	p.helperY[index] = pos.y
+
+	if time.Since(p.lastTimeHelperBooster) >= playerShotCooldown/4 {
+		if p.helperTexXPos == 7 {
+			p.helperTexXPos = 0
+		} else {
+			p.helperTexXPos++
+		}
+		p.lastTimeHelperBooster = time.Now()
+	}
 }
 
 func (p *player) beHit() {
@@ -276,6 +369,7 @@ func (p *player) start(x, y, angle, speed float64, entityType int8) {
 	p.texYPos = 1
 	p.starting = true
 	p.power = 0
+	p.helperCount = 0
 }
 
 func (p *player) executeCollisionWith(other entity) {
@@ -288,14 +382,26 @@ func (p *player) executeCollisionWith(other entity) {
 		p.beDestroyed()
 	} else if other.getType() == entityTypeEnemyExtra {
 		p.beDestroyed()
-	} else if other.getType() == entityTypePowerUp {
-		p.powerUp()
+	} else if other.getType() == entityTypeBomb {
+		p.beDestroyed()
+	} else if other.getType() == entityTypePowerUpBullet {
+		p.powerUp(other)
+	} else if other.getType() == entityTypePowerUpHelper {
+		p.powerUp(other)
 	}
 }
 
-func (p *player) powerUp() {
+func (p *player) powerUp(powerUpEntity entity) {
 
-	p.power++
+	if powerUpEntity.getType() == entityTypePowerUpBullet {
+		if p.power < playerMaxPower {
+			p.power++
+		}
+	} else if powerUpEntity.getType() == entityTypePowerUpHelper {
+		if p.helperCount < playerMaxHelper {
+			p.helperCount++
+		}
+	}
 	score.incrementPointsP1(5)
 }
 

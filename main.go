@@ -62,6 +62,7 @@ func main() {
 	initBulletPool(renderer)
 	initBulletBlastPool(renderer)
 	initPowerUps(renderer)
+	initBombs(renderer)
 	efleet = newEnemyFleet()
 	efleet.startLevel(1)
 
@@ -127,6 +128,10 @@ func main() {
 				en.update()
 			}
 			for _, en := range enemiesExtra {
+				en.draw()
+				en.update()
+			}
+			for _, en := range bombs {
 				en.draw()
 				en.update()
 			}

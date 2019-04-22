@@ -135,7 +135,7 @@ func (e *enemySmall) beDestroyed() {
 	if e.group.aliveCount == 0 {
 		fmt.Println("All small group dead")
 		pu := powerUpFromPool()
-		pu.start(e.x, 0, 0, 0, 0)
+		pu.start(e.x, 0, 0, 0, entityTypePowerUpBullet)
 	}
 	ex := explosionFromPool()
 	ex.start(e.x, e.y, enemySmallSpeed)

@@ -63,6 +63,7 @@ func main() {
 	initBulletBlastPool(renderer)
 	initPowerUps(renderer)
 	initBombs(renderer)
+	initStars(renderer)
 	efleet = newEnemyFleet()
 	efleet.startLevel(1)
 
@@ -104,6 +105,12 @@ func main() {
 			if paused {
 				sdl.Delay(100)
 				continue
+			}
+
+			releaseStars()
+			for _, s := range stars {
+				s.draw()
+				s.update()
 			}
 
 			for _, en := range enemiesExtraComming {

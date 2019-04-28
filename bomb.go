@@ -84,7 +84,7 @@ func (e *bomb) update() {
 	}
 
 	e.y += bombSpeed * delta
-	if e.y > screenHeight {
+	if e.y > screenHeight+bombSize*scale {
 		fmt.Println("Send bomb to poll")
 		e.active = false
 	}

@@ -91,7 +91,7 @@ func (e *powerUp) update() {
 	}
 
 	e.y += enemySmallSpeed * delta
-	if e.y > screenHeight {
+	if e.y > screenHeight+powerUpSize*scale {
 		fmt.Println("Send power up to poll")
 		e.active = false
 	}

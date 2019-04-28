@@ -142,7 +142,7 @@ func (e *enemyBig) update() {
 	eSpeed := enemyBigSpeed * delta
 
 	e.y += eSpeed
-	if e.y > screenHeight {
+	if e.y > screenHeight+enemyBigSize*scale {
 		fmt.Println("Send big enemy back to poll")
 		e.active = false
 	}

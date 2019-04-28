@@ -132,7 +132,7 @@ func (e *enemyExtra) update() {
 	e.shoot()
 
 	e.y += enemyExtraSpeed * delta
-	if e.y > screenHeight {
+	if e.y > screenHeight+enemyExtraSize*scale {
 		fmt.Println("Send extra enemy back to poll")
 		e.active = false
 	}

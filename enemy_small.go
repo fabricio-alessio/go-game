@@ -106,7 +106,7 @@ func (e *enemySmall) update() {
 	radiansAngle := e.angle * math.Pi / 180
 	e.x += 2 * math.Cos(radiansAngle)
 
-	if e.y > screenHeight {
+	if e.y > screenHeight+enemySmallSize*scale {
 		fmt.Println("Send small enemy back to poll")
 		e.active = false
 	}
